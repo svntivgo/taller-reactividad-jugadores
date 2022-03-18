@@ -115,7 +115,36 @@ public class CSVUtilTest {
 
     @Test
     void stream_filtrarNacionalidades(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .distinct()
+                .collectMultimap(Player::getNational);
 
+        listFilter.block().forEach((nacionalidad, players) ->
+        {
+            System.out.println("Nacionalidad: " +nacionalidad);
+        } );
+    }
+
+    @Test
+    void stream_filtrarRankingJugadoresPorNacionalidad(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .sort(Comparator.comparingInt(Player::getWinners).reversed())
+                .distinct()
+                .collectMultimap(Player::getNational);
+
+
+        listFilter.block().forEach((nacionalidad, players) ->
+        {
+            System.out.println("Nacionalidad: " +nacionalidad);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name + ", wins: " + player.winners);
+            });
+        } );
     }
 
 
