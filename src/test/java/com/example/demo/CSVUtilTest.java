@@ -24,43 +24,98 @@ public class CSVUtilTest {
     }
 
     @Test
-    void stream_filtrarJugadoresMayoresA35(){
-        List<Player> list = CsvUtilFile.getPlayers();
-        Map<String, List<Player>> listFilter = list.parallelStream()
-                .filter(player -> player.age >= 35)
-                .map(player -> {
-                    player.name = player.name.toUpperCase(Locale.ROOT);
-                    return player;
-                })
-                .flatMap(playerA -> list.parallelStream()
-                        .filter(playerB -> playerA.club.equals(playerB.club))
-                )
-                .distinct()
-                .collect(Collectors.groupingBy(Player::getClub));
-
-        assert listFilter.size() == 322;
-    }
-
-
-    @Test
-    void reactive_filtrarJugadoresMayoresA35(){
+    void stream_filtrarJugadoresPorId(){
         List<Player> list = CsvUtilFile.getPlayers();
         Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
         Mono<Map<String, Collection<Player>>> listFilter = listFlux
-                .filter(player -> player.age >= 35)
-                .map(player -> {
-                    player.name = player.name.toUpperCase(Locale.ROOT);
-                    return player;
-                })
-                .buffer(100)
-                .flatMap(playerA -> listFlux
-                         .filter(playerB -> playerA.stream()
-                                 .anyMatch(a ->  a.club.equals(playerB.club)))
-                )
+                .filter(player -> player.id == 158023)
                 .distinct()
                 .collectMultimap(Player::getClub);
 
-        assert listFilter.block().size() == 322;
+
+        listFilter.block().forEach((equipo, players) ->
+        {
+            System.out.println("Equipo: " + equipo);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name + ", Edad: " +player.age + ", Nacionalidad: " +player.national );
+                assert player.id == 158023;
+            });
+        } );
+    }
+
+    @Test
+    void stream_ordenarJugadoresPorEdad(){
+
+    }
+
+    @Test
+    void stream_filtrarJugadoresMayoresA34(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.age>34 && player.club.equals("Juventus"))
+                .distinct()
+                .collectMultimap(Player::getClub);
+
+
+        listFilter.block().forEach((equipo, players) ->
+        {
+            System.out.println("Equipo: " + equipo);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name + ", Edad: " +player.age );
+                assert player.club.equals("Juventus");
+                assert player.age >34;
+            });
+        } );
+    }
+
+    @Test
+    void stream_filtrarJugadoresPorEquipo(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.club.equals("Juventus"))
+                .distinct()
+                .collectMultimap(Player::getClub);
+
+
+        listFilter.block().forEach((equipo, players) ->
+        {
+            System.out.println("Equipo: " + equipo);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name);
+                assert player.club.equals("Juventus");
+            });
+        } );
+    }
+
+    @Test
+    void stream_filtrarJugadoresPorNacionalidad(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.national.equals("France"))
+                .distinct()
+                .collectMultimap(Player::getNational);
+
+
+        listFilter.block().forEach((nacionalidad, players) ->
+        {
+            System.out.println("Nacionalidad: " +nacionalidad);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name);
+                assert player.national.equals("France");
+            });
+        } );
+    }
+
+    @Test
+    void stream_filtrarNacionalidades(){
+
     }
 
 
