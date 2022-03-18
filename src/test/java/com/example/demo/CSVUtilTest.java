@@ -45,12 +45,48 @@ public class CSVUtilTest {
     }
 
     @Test
-    void stream_ordenarJugadoresPorEdad(){
+    void stream_ordenarJugadoresPorEdadPorEquipo(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .sort(Comparator.comparingInt(Player::getAge))
+                .distinct()
+                .collectMultimap(Player::getClub);
 
+
+        listFilter.block().forEach((equipo, players) ->
+        {
+            System.out.println("Equipo: " + equipo);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name + ", Edad: " +player.age );
+            });
+        } );
     }
 
     @Test
     void stream_filtrarJugadoresMayoresA34(){
+        List<Player> list = CsvUtilFile.getPlayers();
+        Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
+        Mono<Map<String, Collection<Player>>> listFilter = listFlux
+                .filter(player -> player.age>34)
+                .distinct()
+                .collectMultimap(Player::getClub);
+
+
+        listFilter.block().forEach((equipo, players) ->
+        {
+            System.out.println("Equipo: " + equipo);
+            players.forEach(player ->
+            {
+                System.out.println("Jugador: " + player.name + ", Edad: " +player.age );
+                assert player.age >34;
+            });
+        } );
+    }
+
+    @Test
+    void stream_filtrarJugadoresMayoresA34PorEquipo(){
         List<Player> list = CsvUtilFile.getPlayers();
         Flux<Player> listFlux = Flux.fromStream(list.parallelStream()).cache();
         Mono<Map<String, Collection<Player>>> listFilter = listFlux
@@ -124,6 +160,7 @@ public class CSVUtilTest {
         listFilter.block().forEach((nacionalidad, players) ->
         {
             System.out.println("Nacionalidad: " +nacionalidad);
+            assert nacionalidad.equals("France");
         } );
     }
 
